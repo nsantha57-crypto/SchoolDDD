@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>පාසල් කළමනාකරණ පද්ධතිය (School Management System)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Abhaya+Libre:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="assets/flower-logo.png" id="favicon">
+    <link rel="apple-touch-icon" href="assets/flower-logo.png" id="apple-icon">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal-overlay">
+        <div class="modal-content premium-card">
+            <h2 style="text-align:center; margin-bottom:1.5rem;">පද්ධතියට ඇතුල් වන්න (Login)</h2>
+            <div class="form-group mb-4">
+                <label>ඔබ කවුරුන්ද? (Role)</label>
+                <select id="login-role" class="custom-select" onchange="handleRoleChange()" style="width:100%; padding:0.8rem; font-size:1.1rem; border-radius:8px;">
+                    <option value="viewer">සිසුවා / දෙමාපියා (Student / Parent) - නරඹන්නෙකු පමණි</option>
+                    <option value="class_teacher">පන්ති භාර ගුරු (Class Teacher)</option>
+                    <option value="flower_teacher">මල් ලකුණු භාර ගුරු (Flower Teacher)</option>
+                    <option value="principal">ප්‍රධානාචාර්ය (Principal)</option>
+                    <option value="admin">ප්‍රධාන පරිපාලක (Admin)</option>
+                </select>
+            </div>
+            <div class="form-group mb-4" id="login-class-group" style="display:none;">
+                <label>ඔබගේ පන්තිය (Your Class)</label>
+                <select id="login-class" class="custom-select" style="width:100%; padding:0.8rem; font-size:1.1rem; border-radius:8px;">
+                    <option value="1">1 ශ්‍රේණිය</option>
+                    <option value="2">2 ශ්‍රේණිය</option>
+                    <option value="3">3 ශ්‍රේණිය</option>
+                    <option value="4">4 ශ්‍රේණිය</option>
+                    <option value="5">5 ශ්‍රේණිය</option>
+                    <option value="6">6 ශ්‍රේණිය</option>
+                    <option value="7">7 ශ්‍රේණිය</option>
+                    <option value="8">8 ශ්‍රේණිය</option>
+                    <option value="9">9 ශ්‍රේණිය</option>
+                    <option value="10">10 ශ්‍රේණිය</option>
+                    <option value="11">11 ශ්‍රේණිය</option>
+                    <option value="12">12 ශ්‍රේණිය</option>
+                    <option value="13">13 ශ්‍රේණිය</option>
+                </select>
+            </div>
+            <div class="form-group mb-4" id="login-pin-group" style="display:none;">
+                <label>මුරපදය (PIN)</label>
+                <input type="password" id="login-pin" class="table-input" placeholder="මුරපදය ඇතුළත් කරන්න" style="width:100%; padding:0.8rem; font-size:1.1rem; border-radius:8px;">
+            </div>
+            <button class="btn btn-primary" style="width:100%; justify-content:center; font-size:1.1rem; padding:0.8rem;" onclick="processLogin()"><i class="fas fa-sign-in-alt"></i> ඇතුල් වන්න (Continue)</button>
+        </div>
+    </div>
+    
+    <div class="app-container">
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="logo-area">
+                <div class="logo-placeholder-circle" id="sidebar-logo-placeholder" style="display:none;">School Logo</div>
+                <img src="assets/flower-logo.png" alt="School Logo" id="sidebar-logo">
+                <h2 id="sidebar-school-name">පාසල් නම</h2>
+            </div>
+            <ul class="nav-links">
+                <li class="active" data-target="home"><i class="fas fa-home"></i> <span>මුල් පිටුව (Home)</span></li>
+                <li data-target="students"><i class="fas fa-user-graduate"></i> <span>සිසුන් (Students)</span></li>
+                <li data-target="teachers"><i class="fas fa-chalkboard-teacher"></i> <span>ගුරුවරු (Teachers)</span></li>
+                <li data-target="prefects"><i class="fas fa-user-shield"></i> <span>ශිෂ්‍ය නායක (Prefects)</span></li>
+                <li data-target="classes"><i class="fas fa-users-class"></i> <span>පන්ති (Classes)</span></li>
+                <li data-target="notices"><i class="fas fa-bell"></i> <span>දැන්වීම් (Notices)</span></li>
+                <li data-target="gallery"><i class="fas fa-images"></i> <span>ගැලරිය (Gallery)</span></li>
+                <li data-target="books"><i class="fas fa-book"></i> <span>පොත් / පාඩම් (Books)</span></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header>
+                <div class="header-left">
+                    <button class="btn-menu-toggle" id="menu-toggle"><i class="fas fa-bars"></i></button>
+                    <div class="header-title">
+                        <h1 class="gradient-text" id="display-school-name">පාසලේ නම (School Name)</h1>
+                    </div>
+                </div>
+                <div class="header-user">
+                    <button class="btn btn-primary btn-install" id="install-btn" style="display:none; padding: 0.5rem 1rem; font-size: 0.85rem;"><i class="fas fa-download"></i> Install (ස්ථාපනය කරන්න)</button>
+                    <button class="btn-theme-toggle" id="theme-toggle" title="වර්ණ සංකලනය (Theme)"><i class="fas fa-palette"></i></button>
+                    <div id="role-status-badge" style="margin-right: 1rem; font-size: 0.8rem; padding: 0.2rem 0.5rem; border-radius: 4px; background: rgba(99, 102, 241, 0.1); color: var(--primary-color); font-weight: 600;"></div>
+                    <div class="user-profile" onclick="document.getElementById('login-modal').style.display='flex'; document.getElementById('login-pin').value='';" style="cursor:pointer;" title="භූමිකාව වෙනස් කරන්න (Change Role / Logout)">
+                        <img src="https://ui-avatars.com/api/?name=Admin&background=random" alt="User">
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- Mobile Logo Section -->
+                <div class="mobile-logo-section">
+                    <div class="logo-placeholder-circle mobile-main-placeholder" id="mobile-logo-placeholder" style="display:none;">School Logo</div>
+                    <img src="assets/flower-logo.png" alt="School Logo" class="mobile-main-logo">
+                    <h2 class="mobile-school-title">පාසලේ නම</h2>
+                </div>
+
+                <!-- Mobile Quick Navigation Menu -->
+                <div class="mobile-quick-menu">
+                    <div class="menu-item" onclick="document.querySelector('[data-target=\'home\']').click()"><i class="fas fa-home"></i> මුල් පිටුව</div>
+                    <div class="menu-item" onclick="document.querySelector('[data-target=\'students\']').click()"><i class="fas fa-user-graduate"></i> සිසුන්</div>
+                    <div class="menu-item" onclick="document.querySelector('[data-target=\'teachers\']').click()"><i class="fas fa-chalkboard-teacher"></i> ගුරුවරු</div>
+                    <div class="menu-item" onclick="document.querySelector('[data-target=\'prefects\']').click()"><i class="fas fa-user-shield"></i> නායකයන්</div>
+                    <div class="menu-item" onclick="document.querySelector('[data-target=\'classes\']').click()"><i class="fas fa-users-class"></i> පන්ති</div>
+                    <div class="menu-item" onclick="document.querySelector('[data-target=\'notices\']').click()"><i class="fas fa-bell"></i> දැන්වීම්</div>
+                    <div class="menu-item" onclick="document.querySelector('[data-target=\'gallery\']').click()"><i class="fas fa-images"></i> ගැලරිය</div>
+                    <div class="menu-item" onclick="document.querySelector('[data-target=\'books\']').click()"><i class="fas fa-book"></i> පොත්/පාඩම්</div>
+                </div>
+
+                <!-- Home Section - School Management -->
+                <section id="home" class="page-section active">
+                    <div class="card premium-card">
+                        <div class="home-logo-header" style="text-align:center; margin-bottom: 2rem;">
+                             <div class="logo-placeholder-circle" id="home-logo-placeholder" style="display:none; width:120px; height:120px; margin: 0 auto; font-size: 1rem;">School Logo</div>
+                             <img src="assets/flower-logo.png" alt="School Logo" id="home-logo" style="width: 120px; height: 120px; margin: 0 auto; border-radius: 50%; object-fit: cover; border: 4px solid var(--warning-color); box-shadow: var(--shadow-lg);">
+                        </div>
+                        <h2 class="section-title">පාසල් කළමනාකරණය (School Management)</h2>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label style="font-size: 1.1rem;">පාසලේ නම (School Name)</label>
+                                <input type="text" id="school-name" placeholder="පාසලේ නම ඇතුලත් කරන්න..." value="" style="font-size: 1.3rem; font-weight: bold;">
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size: 1.1rem;">ලිපිනය (Address)</label>
+                                <textarea id="school-address" placeholder="ලිපිනය ඇතුලත් කරන්න..." rows="2" style="font-size: 1.1rem;"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size: 1.1rem; color: #ea580c;">තේමාව (Theme - පේළි 2 කට ඉඩ ඇත)</label>
+                                <textarea id="school-theme" placeholder="තේමාව මෙතැන ඇතුලත් කරන්න..." class="theme-input" style="font-size: 1.4rem; font-weight: 800; border: 2px solid #ea580c; border-radius: 8px; padding: 10px;"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size: 1.1rem;">ප්‍රධානාචාර්යතුමාගේ නම (Principal Name)</label>
+                                <input type="text" id="principal-name" placeholder="ප්‍රධානාචාර්යතුමාගේ නම ඇතුලත් කරන්න..." style="font-size: 1.1rem;">
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size: 1.1rem;">දුරකථන අංක 1 (Phone 1)</label>
+                                <input type="text" id="phone-1" placeholder="දුරකථන අංකය ඇතුලත් කරන්න..." style="font-size: 1.1rem;">
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size: 1.1rem;">දුරකථන අංක 2 (Phone 2)</label>
+                                <input type="text" id="phone-2" placeholder="දුරකථන අංකය ඇතුලත් කරන්න..." style="font-size: 1.1rem;">
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size: 1.1rem;">දුරකථන අංක 3 (Phone 3)</label>
+                                <input type="text" id="phone-3" placeholder="දුරකථන අංකය ඇතුලත් කරන්න..." style="font-size: 1.1rem;">
+                            </div>
+                            <div class="form-group full-width">
+                                <label style="font-size: 1.1rem;">Logo Upload</label>
+                                <input type="file" id="logo-upload" accept="image/*">
+                            </div>
+                        </div>
+                        <div class="save-action-area">
+                            <button class="btn btn-save-all" onclick="manualSave()"><i class="fas fa-save"></i> දත්ත සුරකින්න (Save All Data)</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Students Section -->
+                <section id="students" class="page-section">
+                    <div class="card">
+                        <div class="section-header">
+                            <h2 class="section-title" style="margin-bottom:0">සිසුන් කළමනාකරණය (Student Management)</h2>
+                            <div class="actions" style="display:flex; gap:10px; align-items:center;">
+                                <div style="display:flex; align-items:center; gap:5px;">
+                                    <label>උපන් දිනය (Birthday):</label>
+                                    <input type="date" id="student-attendance-date" class="custom-select" title="උපන් දිනය" style="padding: 0.5rem; width: auto;">
+                                </div>
+                                <select id="student-class-filter" class="custom-select" onchange="filterStudentsByClass()">
+                                    <option value="all">සියලුම පන්ති (All Classes)</option>
+                                    <option value="1">1 ශ්‍රේණිය</option>
+                                    <option value="2">2 ශ්‍රේණිය</option>
+                                    <option value="3">3 ශ්‍රේණිය</option>
+                                    <option value="4">4 ශ්‍රේණිය</option>
+                                    <option value="5">5 ශ්‍රේණිය</option>
+                                    <option value="6">6 ශ්‍රේණිය</option>
+                                    <option value="7">7 ශ්‍රේණිය</option>
+                                    <option value="8">8 ශ්‍රේණිය</option>
+                                    <option value="9">9 ශ්‍රේණිය</option>
+                                    <option value="10">10 ශ්‍රේණිය</option>
+                                    <option value="11">11 ශ්‍රේණිය</option>
+                                    <option value="12">12 ශ්‍රේණිය</option>
+                                    <option value="13">13 ශ්‍රේණිය</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table" id="students-table">
+                                <thead>
+                                    <tr>
+                                        <th style="min-width: 250px;">සිසුවා සහ දෙමාපිය විස්තර (Student & Parent Details)</th>
+                                        <th>පන්තිය (Grade)</th>
+                                        <th>පැමිණීම (Att.)</th>
+                                        <th>මල් (Flower)</th>
+                                        <th>ගිලන්පස (Gilanpasa)</th>
+                                        <th>වාර විභාග (Term Marks)</th>
+                                        <th>ක්‍රියාමාර්ග (Actions)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="student-row">
+                                        <td>
+                                            <div class="student-details-container">
+                                                <input type="text" class="table-input" placeholder="සිසුවාගේ නම (Student Name)...">
+                                                <input type="text" class="table-input" placeholder="දෙමාපිය නම (Parent Name)...">
+                                                <input type="text" class="table-input" placeholder="දෙමාපිය WhatsApp...">
+                                                <input type="text" class="table-input" placeholder="සිසුවාගේ WhatsApp...">
+                                                <input type="text" class="table-input datepicker" placeholder="උපන් දිනය (YYYY-MM-DD)..." title="උපන් දිනය">
+                                                <input type="text" class="table-input full-width" placeholder="ලිපිනය (Address)...">
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <select class="table-input" style="width: 100px;">
+                                                <option value="">පන්තිය...</option>
+                                                <option value="1">1 ශ්‍රේණිය</option>
+                                                <option value="2">2 ශ්‍රේණිය</option>
+                                                <option value="3">3 ශ්‍රේණිය</option>
+                                                <option value="4">4 ශ්‍රේණිය</option>
+                                                <option value="5">5 ශ්‍රේණිය</option>
+                                                <option value="6">6 ශ්‍රේණිය</option>
+                                                <option value="7">7 ශ්‍රේණිය</option>
+                                                <option value="8">8 ශ්‍රේණිය</option>
+                                                <option value="9">9 ශ්‍රේණිය</option>
+                                                <option value="10">10 ශ්‍රේණිය</option>
+                                                <option value="11">11 ශ්‍රේණිය</option>
+                                                <option value="12">12 ශ්‍රේණිය</option>
+                                                <option value="13">13 ශ්‍රේණිය</option>
+                                            </select>
+                                        </td>
+                                        <td><input type="checkbox" class="attendance-check" title="Present"> පැමිණීම</td>
+                                        <td><input type="number" min="0" max="10" class="table-input small-input" placeholder="0" title="මල් පූජාව"></td>
+                                        <td><input type="number" min="0" max="10" class="table-input small-input" placeholder="0" title="ගිලන්පස"></td>
+                                        <td><input type="number" min="0" max="100" class="table-input small-input" placeholder="0" title="වාර විභාග ලකුණු"></td>
+                                        <td>
+                                            <div class="student-actions">
+                                                <button class="btn btn-warning btn-sm" onclick="sendAbsenceSMS(this)" title="නොපැමිණි බව දැන්වීම"><i class="fab fa-whatsapp"></i></button>
+                                                <button class="btn btn-danger btn-sm" onclick="removeRow(this)" title="මකන්න"><i class="fas fa-trash"></i></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <button class="btn btn-primary mt-3" onclick="addRow(this)"><i class="fas fa-plus"></i> නව සිසුවෙක් එකතු කරන්න</button>
+                        </div>
+                        <div class="save-action-area">
+                            <button class="btn btn-save-all" onclick="manualSave()"><i class="fas fa-save"></i> දත්ත සුරකින්න (Save All Data)</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Teachers Section -->
+                <section id="teachers" class="page-section">
+                    <div class="card">
+                        <div class="section-header">
+                            <div>
+                                <h2 class="section-title" style="margin-bottom:0.5rem">ගුරු මණ්ඩලය කළමනාකරණය (Teachers Management)</h2>
+                                <p class="subtitle" style="margin:0; color:var(--text-muted)">ආචාර්ය මණ්ඩලය (20 දෙනා සඳහා)</p>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:5px;">
+                                <label>දිනය (Date/Month/Year):</label>
+                                <input type="date" id="teacher-attendance-date" class="custom-select" title="පැමිණීමේ දිනය" style="padding: 0.5rem; width: auto;">
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table" id="teachers-table">
+                                <thead>
+                                    <tr>
+                                        <th style="min-width: 280px;">ගුරු විස්තර (Teacher Details)</th>
+                                        <th>තනතුර (Role)</th>
+                                        <th>පැමිණීම (Att.)</th>
+                                        <th>ක්‍රියාමාර්ග (Actions)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <div class="teacher-details-container">
+                                                <input type="text" class="table-input" placeholder="ගුරුවරයාගේ නම (Teacher Name)...">
+                                                <input type="text" class="table-input" placeholder="ලිපිනය (Address)...">
+                                                <input type="text" class="table-input full-width" placeholder="WhatsApp / දුරකථන අංකය...">
+                                            </div>
+                                        </td>
+                                        <td><input type="text" class="table-input" value="පන්ති භාර ගුරු" placeholder="තනතුර..."></td>
+                                        <td><input type="checkbox" class="attendance-check"></td>
+                                        <td>
+                                            <div class="teacher-actions">
+                                                <button class="btn btn-warning btn-sm" onclick="sendTeacherLeave(this, 'whatsapp')"><i class="fab fa-whatsapp"></i> නිවාඩු</button>
+                                                <button class="btn btn-danger btn-sm" onclick="removeRow(this)" title="මකන්න"><i class="fas fa-trash"></i></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <button class="btn btn-primary mt-3" onclick="addRow(this)"><i class="fas fa-plus"></i> තවත් ගුරුවරුන් එකතු කරන්න</button>
+                            <br><br>
+                            <button class="btn btn-danger"><i class="fas fa-file-pdf"></i> දින 4ක නිවාඩු ගත් ගුරුවරුන්ගේ වාර්තාව (4-day leave Report)</button>
+                        </div>
+                        <div class="save-action-area">
+                            <button class="btn btn-save-all" onclick="manualSave()"><i class="fas fa-save"></i> දත්ත සුරකින්න (Save All Data)</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Prefects Section -->
+                <section id="prefects" class="page-section">
+                    <div class="card premium-card">
+                        <h2 class="section-title">ශිෂ්‍ය නායක කළමනාකරණය (Prefects Management)</h2>
+                        
+                        <div class="section-header">
+                            <h3 class="subsection-title" style="margin:0">නායක නාමලේඛනය සහ පැමිණීම</h3>
+                            <div style="display:flex; align-items:center; gap:5px;">
+                                <label>දිනය (Date/Month/Year):</label>
+                                <input type="date" id="prefect-attendance-date" class="custom-select" title="පැමිණීමේ දිනය" style="padding: 0.5rem; width: auto;">
+                            </div>
+                        </div>
+                        <div class="table-container mb-4">
+                            <table class="data-table" id="prefects-table">
+                                <thead>
+                                    <tr>
+                                        <th style="min-width: 250px;">නායකයාගේ විස්තර (Prefect Details)</th>
+                                        <th>තනතුර (Position)</th>
+                                        <th>පැමිණීම (Att.)</th>
+                                        <th>ක්‍රියාමාර්ග (Actions)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <div class="prefect-details-container">
+                                                <input type="text" class="table-input" placeholder="ශිෂ්‍ය නායකයාගේ නම...">
+                                                <input type="text" class="table-input" placeholder="WhatsApp / දුරකථන අංකය...">
+                                            </div>
+                                        </td>
+                                        <td><input type="text" class="table-input" value="සාමාන්‍ය ශිෂ්‍ය නායක" placeholder="තනතුර..."></td>
+                                        <td><input type="checkbox" class="attendance-check"></td>
+                                        <td>
+                                            <div style="display:flex; gap:5px;">
+                                                <button class="btn btn-warning btn-sm" onclick="sendPrefectNotice(this)" title="දැන්වීමක් යවන්න"><i class="fab fa-whatsapp"></i></button>
+                                                <button class="btn btn-danger btn-sm" onclick="removeRow(this)" title="මකන්න"><i class="fas fa-trash"></i></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <button class="btn btn-primary mt-3" onclick="addRow(this)"><i class="fas fa-plus"></i> තවත් එකතු කරන්න</button>
+                        </div>
+
+                        <hr class="divider">
+
+                        <h3 class="subsection-title">ශිෂ්‍ය නායක සම්මුඛ පරීක්ෂණ මණ්ඩලය (Interview Board Assessment)</h3>
+                        <p>මුළු ලකුණු 100 න් සිසුන් තේරීම / Selection out of 100 marks</p>
+                        <div class="table-container">
+                            <table class="data-table marks-table" id="interview-table">
+                                <thead>
+                                    <tr>
+                                        <th>අපේක්ෂකයාගේ නම (Candidate Name)</th>
+                                        <th title="පැමිණීම (20)">පැමිණීම (20)</th>
+                                        <th title="පිරිසිදුකම (10)">පිරිසිදුකම (10)</th>
+                                        <th title="විනය (10)">විනය (10)</th>
+                                        <th title="සහතික (10)">සහතික (10)</th>
+                                        <th title="දෙමාපිය සබඳතා (10)">දෙමාපිය... (10)</th>
+                                        <th title="නිපුණතා (10)">නිපුණතා (10)</th>
+                                        <th title="කථිකත්වය (10)">කථිකත්වය (10)</th>
+                                        <th title="ඉදිරිපත් කිරීම (10)">ඉදිරිපත් කිරීම (10)</th>
+                                        <th title="පන්ති භාර ගුරු (10)">ගුරු ලකුණු (10)</th>
+                                        <th>එකතුව (100)</th>
+                                        <th>ක්‍රියාමාර්ග (Actions)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="text" class="table-input" placeholder="නම..."></td>
+                                        <td><input type="number" max="20" placeholder="0" class="mark-input"></td>
+                                        <td><input type="number" max="10" placeholder="0" class="mark-input"></td>
+                                        <td><input type="number" max="10" placeholder="0" class="mark-input"></td>
+                                        <td><input type="number" max="10" placeholder="0" class="mark-input"></td>
+                                        <td><input type="number" max="10" placeholder="0" class="mark-input"></td>
+                                        <td><input type="number" max="10" placeholder="0" class="mark-input"></td>
+                                        <td><input type="number" max="10" placeholder="0" class="mark-input"></td>
+                                        <td><input type="number" max="10" placeholder="0" class="mark-input"></td>
+                                        <td><input type="number" max="10" placeholder="0" class="mark-input"></td>
+                                        <td class="total-marks"><span class="badge badge-success">0</span></td>
+                                        <td><button class="btn btn-danger" onclick="removeRow(this)" title="මකන්න" style="padding: 0.6rem 0.8rem;"><i class="fas fa-trash"></i></button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <button class="btn btn-primary mt-3" onclick="addRow(this)"><i class="fas fa-plus"></i> අපේක්ෂකයෙකු එකතු කරන්න</button>
+                        </div>
+                        <div class="save-action-area">
+                            <button class="btn btn-save-all" onclick="manualSave()"><i class="fas fa-save"></i> දත්ත සුරකින්න (Save All Data)</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Classes Section -->
+                <section id="classes" class="page-section">
+                    <div class="card">
+                        <div class="section-header">
+                            <h2 class="section-title">පන්ති කළමනාකරණය (Class Management)</h2>
+                            <div class="actions">
+                                <select class="custom-select">
+                                    <option value="1">1 ශ්‍රේණිය</option>
+                                    <option value="2">2 ශ්‍රේණිය</option>
+                                    <option value="3">3 ශ්‍රේණිය</option>
+                                    <option value="4">4 ශ්‍රේණිය</option>
+                                    <option value="5">5 ශ්‍රේණිය</option>
+                                    <option value="6">6 ශ්‍රේණිය</option>
+                                    <option value="7">7 ශ්‍රේණිය</option>
+                                    <option value="8">8 ශ්‍රේණිය</option>
+                                    <option value="9">9 ශ්‍රේණිය</option>
+                                    <option value="10">10 ශ්‍රේණිය</option>
+                                    <option value="11">11 ශ්‍රේණිය</option>
+                                    <option value="12">12 ශ්‍රේණිය</option>
+                                    <option value="13">13 ශ්‍රේණිය</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>පන්තිය භාර ගුරුවරයා (Class Teacher)</label>
+                            <input type="text" id="class-teacher-name" placeholder="ගුරුවරයාගේ නම ඇතුලත් කරන්න..." class="form-control mb-4">
+                        </div>
+
+                        <div class="table-container mb-4">
+                            <table class="data-table" id="classes-table">
+                                <thead>
+                                    <tr>
+                                        <th>සිසුවාගේ නම (Student Name)</th>
+                                        <th>වාර විභාග ලකුණු (Term Marks)</th>
+                                        <th>මල් පූජා ලකුණු (Flower)</th>
+                                        <th>ගිලන්පස ලකුණු (Gilanpasa)</th>
+                                        <th>තනතුර (Role/Position)</th>
+                                        <th>ක්‍රියාමාර්ග (Actions)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="text" class="table-input" placeholder="නම..."></td>
+                                        <td><input type="number" class="table-input small-input"></td>
+                                        <td><input type="number" class="table-input small-input"></td>
+                                        <td><input type="number" class="table-input small-input"></td>
+                                        <td>
+                                            <input type="text" class="table-input" placeholder="උදා: පන්ති නායක...">
+                                        </td>
+                                        <td><button class="btn btn-danger" onclick="removeRow(this)" title="මකන්න" style="padding: 0.6rem 0.8rem;"><i class="fas fa-trash"></i></button></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" class="table-input" placeholder="නම..."></td>
+                                        <td><input type="number" class="table-input small-input"></td>
+                                        <td><input type="number" class="table-input small-input"></td>
+                                        <td><input type="number" class="table-input small-input"></td>
+                                        <td>
+                                            <input type="text" class="table-input" placeholder="උදා: ශිෂ්‍ය නායක...">
+                                        </td>
+                                        <td><button class="btn btn-danger" onclick="removeRow(this)" title="මකන්න" style="padding: 0.6rem 0.8rem;"><i class="fas fa-trash"></i></button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <button class="btn btn-primary mt-3" onclick="addRow(this)"><i class="fas fa-plus"></i> සිසුවෙක් එකතු කරන්න</button>
+                        </div>
+
+                        <div class="highlight-box bg-light-purple">
+                            <h3><i class="fas fa-trophy text-gold"></i> වාර විභාගයෙන් වැඩිම ලකුණු ගත් තිදෙනා (Top 3 Students)</h3>
+                            <ol id="top-students-list">
+                                <li><input type="text" class="table-input" placeholder="පළමු ස්ථානය..."></li>
+                                <li><input type="text" class="table-input" placeholder="දෙවන ස්ථානය..."></li>
+                                <li><input type="text" class="table-input" placeholder="තෙවන ස්ථානය..."></li>
+                            </ol>
+                        </div>
+
+                        <div class="mt-4 text-center">
+                            <button class="btn btn-secondary btn-lg" onclick="generatePDF()"><i class="fas fa-file-pdf"></i> End of Year Summary PDF (English)</button>
+                        </div>
+                        <div class="save-action-area mt-4">
+                            <button class="btn btn-save-all" onclick="manualSave()"><i class="fas fa-save"></i> දත්ත සුරකින්න (Save All Data)</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Notices Section -->
+                <section id="notices" class="page-section">
+                    <div class="card premium-card">
+                        <div class="section-header">
+                            <h2 class="section-title" style="margin:0">දැන්වීම් කළමනාකරණය (Notice Management)</h2>
+                            <div style="display:flex; align-items:center; gap:5px;">
+                                <label>පළකළ දිනය (Date/Month/Year):</label>
+                                <input type="date" class="custom-select" title="දැන්වීමේ දිනය" style="padding: 0.5rem; width: auto;">
+                            </div>
+                        </div>
+                        
+                        <div class="form-grid layout-2-col">
+                            <div class="form-group">
+                                <label>ලබන්නා තෝරන්න (Select Recipient)</label>
+                                <select class="custom-select" id="notice-recipient">
+                                    <option value="all_students">සියලුම සිසුන් (All Students)</option>
+                                    <option value="class_wise">පන්ති මට්ටමින් (By Class)</option>
+                                    <option value="teachers">ගුරුවරුන් (Teachers)</option>
+                                    <option value="parents">දෙමාපියන් (Parents)</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="class-selector" style="display:none;">
+                                <label>පන්තිය තෝරන්න</label>
+                                <select class="custom-select">
+                                    <option value="1">1 ශ්‍රේණිය</option>
+                                    <option value="2">2 ශ්‍රේණිය</option>
+                                    <option value="3">3 ශ්‍රේණිය</option>
+                                    <option value="4">4 ශ්‍රේණිය</option>
+                                    <option value="5">5 ශ්‍රේණිය</option>
+                                    <option value="6">6 ශ්‍රේණිය</option>
+                                    <option value="7">7 ශ්‍රේණිය</option>
+                                    <option value="8">8 ශ්‍රේණිය</option>
+                                    <option value="9">9 ශ්‍රේණිය</option>
+                                    <option value="10">10 ශ්‍රේණිය</option>
+                                    <option value="11">11 ශ්‍රේණිය</option>
+                                    <option value="12">12 ශ්‍රේණිය</option>
+                                    <option value="13">13 ශ්‍රේණිය</option>
+                                </select>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>පණිවිඩය (Message)</label>
+                                <textarea class="form-control" rows="5" placeholder="පණිවිඩය මෙහි ලියන්න... (Type message here)"></textarea>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="btn btn-success" onclick="sendNotice('whatsapp')"><i class="fab fa-whatsapp"></i> Send via WhatsApp</button>
+                            <button class="btn btn-primary" onclick="sendNotice('sms')"><i class="fas fa-sms"></i> Send SMS</button>
+                        </div>
+                        <div class="save-action-area mt-4">
+                            <button class="btn btn-save-all" onclick="manualSave()"><i class="fas fa-save"></i> දත්ත සුරකින්න (Save All Data)</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="gallery" class="page-section">
+                    <div class="card">
+                        <div class="section-header">
+                            <h2 class="section-title">ඡායාරූප ගැලරිය (Photo Gallery)</h2>
+                            <button class="btn btn-primary" onclick="document.getElementById('gallery-upload').click()"><i class="fas fa-upload"></i> Upload Photo</button>
+                            <input type="file" id="gallery-upload" style="display:none;" accept="image/*">
+                        </div>
+
+                        <div class="gallery-upload-zone" id="drop-zone" onclick="document.getElementById('gallery-upload').click()">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>ඡායාරූප මෙතැනට ඇද දමන්න (Drag & Drop) හෝ මෙතැන Click කරන්න</p>
+                        </div>
+
+                        <div class="gallery-grid" id="gallery-grid">
+                            <!-- Photos will be dynamically loaded here -->
+                        </div>
+                   </div>
+                </section>
+
+                <!-- Books/Lessons Section -->
+                <section id="books" class="page-section">
+                    <div class="card premium-card">
+                        <h2 class="section-title">පාඩම් මාලාව (Lessons / Books)</h2>
+                        <p class="subtitle mb-4">නව පොතේ පාඩම් මෙතැනින් කියවන්න</p>
+
+                        <!-- Admin Level Control -->
+                        <div class="admin-controls mb-4" id="books-admin-controls" style="display:none; background: rgba(99, 102, 241, 0.05); padding: 1.5rem; border-radius: var(--radius-md); border: 1px dashed var(--primary-color); margin-bottom: 2rem;">
+                            <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+                                <label style="font-weight: 700; color: var(--primary-color); font-size: 1.1rem; margin:0;">
+                                    <i class="fas fa-unlock-alt"></i> සිසුන් සඳහා විවෘත පාඩම් මට්ටම (Unlock Level):
+                                </label>
+                                <select id="unlock-level" class="custom-select" style="max-width: 250px;" onchange="updateUnlockLevel()">
+                                    <option value="0">සියල්ල වසා ඇත (Locked)</option>
+                                    <option value="1">පාඩම 01 පමණක් විවෘතයි</option>
+                                    <option value="2">පාඩම 01 සහ 02 විවෘතයි</option>
+                                </select>
+                                <span class="badge badge-success" id="unlock-status-badge">මට්ටම: 1</span>
+                            </div>
+                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem; margin-bottom:0;">* ගුරුතුමා/ගුරුතුමිය විසින් අගුල විවෘත කළ පසු සිසුන්ට පාඩම් බැලිය හැක.</p>
+                        </div>
+                        
+                        <div class="lessons-grid">
+                            <!-- Lesson 1 -->
+                            <div class="lesson-card" id="lesson-card-1">
+                                <div class="lock-overlay"><i class="fas fa-lock"></i></div>
+                                <div class="lesson-badge">පාඩම 01</div>
+                                <div class="lesson-image" style="height: 200px; overflow: hidden;">
+                                    <img src="assets/dharma_wheel.png" style="width: 100%; height: 100%; object-fit: cover;">
+                                </div>
+                                <div class="lesson-content">
+                                    <h3>තෙරුවන් හඳුනාගනිමු</h3>
+                                    <p class="lesson-desc">බුද්ධ, ධම්ම, සංඝ යන රත්නත්‍රය පිළිබඳ මූලික හැඳින්වීම සහ එහි අසිරිමත් ගුණාංග පිළිබඳව මෙම පාඩමෙන් විස්තර කෙරේ.</p>
+                                    <div class="lesson-footer">
+                                        <button class="btn btn-primary btn-sm" onclick="showLesson(1)"><i class="fas fa-book-open"></i> කියවන්න</button>
+                                        <span class="read-time"><i class="far fa-clock"></i> විනාඩි 10</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Lesson 2 -->
+                            <div class="lesson-card" id="lesson-card-2">
+                                <div class="lock-overlay"><i class="fas fa-lock"></i></div>
+                                <div class="lesson-badge">පාඩම 02</div>
+                                <div class="lesson-image" style="height: 200px; overflow: hidden;">
+                                    <img src="assets/jetavana_monastery.png" style="width: 100%; height: 100%; object-fit: cover;">
+                                </div>
+                                <div class="lesson-content">
+                                    <h3>බුදු සිරිතේ අවසන් 25 වසර</h3>
+                                    <p class="lesson-desc">බුදුරජාණන් වහන්සේගේ බුද්ධත්වයෙන් පසු අවසන් වසර 25 තුළ සිදු වූ සුවිශේෂී සිදුවීම් සහ දේශනා පිළිබඳව මෙහි අඩංගු වේ.</p>
+                                    <div class="lesson-footer">
+                                        <button class="btn btn-primary btn-sm" onclick="showLesson(2)"><i class="fas fa-book-open"></i> කියවන්න</button>
+                                        <span class="read-time"><i class="far fa-clock"></i> විනාඩි 15</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Lesson Content Modal -->
+                <div id="lesson-modal" class="modal-overlay">
+                    <div class="modal-content premium-card lesson-modal-content">
+                        <button class="close-modal" onclick="closeLesson()">&times;</button>
+                        <div id="lesson-detail-body">
+                            <!-- Detailed lesson content will be injected here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Message / Feedback Box -->
+            <div class="system-message mt-4">
+                <h4><i class="fas fa-info-circle"></i> System Notice (අඩුපාඩු/Shortcomings & Limitations)</h4>
+                <ul>
+                    <li>1. <strong>SMS / WhatsApp Messages:</strong> <span class="badge badge-success">Enabled (WhatsApp)</span> දැන් WhatsApp හරහා පණිවිඩ යැවිය හැක. SMS සඳහා backend (API) සේවාවක් අවශ්‍ය වේ.</li>
+                    <li>2. <strong>PDF Generation:</strong> Currently mocked. In production, a library like `jsPDF` or a backend printing service is needed to generate formatted certificates/reports.</li>
+                    <li>3. <strong>Data Persistence (දත්ත ගබඩා කිරීම):</strong> <span class="badge badge-success">Succeed (දැන් දත්ත ස්වයංක්‍රීයව ගබඩා වේ)</span> Local Storage මඟින් දැන් ඔබේ දත්ත ආරක්ෂිතව ගබඩා කෙරේ.</li>
+                    <li>4. <strong>File Uploads:</strong> Selecting files works locally but they are not saved to a server permanently across different browsers.</li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>
